@@ -1,5 +1,6 @@
 import os, json, requests
 from bs4 import BeautifulSoup
+from playwright.sync_api import sync_playwright
 
 TG_TOKEN = os.environ["TG_TOKEN"]
 CHAT_ID = os.environ["CHAT_ID"]
@@ -18,8 +19,14 @@ def notify(m):
                   json={"chat_id": CHAT_ID, "text": m})
 
 def get_text(url):
-    r = requests.get(url, headers=H, timeout=60)
-    return BeautifulSoup(r.text, "html.parser").get_text("\n", strip=True)
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page(user_agent=H["User-Agent"], locale="en-US")
+        page.goto(url, timeout=45000, wait_until="domcontentloaded")
+        page.wait_for_timeout(3000)
+        html = page.content()
+        browser.close()
+    return BeautifulSoup(html, "html.parser").get_text("\n", strip=True)
 
 state = {"alerted": [], "whatson_seen": None}
 if os.path.exists(STATE):
