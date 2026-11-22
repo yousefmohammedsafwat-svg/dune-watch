@@ -20,7 +20,7 @@ def notify(m):
 
 def get_text(url):
     with sync_playwright() as p:
-        browser = p.chromium.launch()
+        browser = p.chromium.launch(args=["--disable-http2", "--disable-blink-features=AutomationControlled"])
         page = browser.new_page(user_agent=H["User-Agent"], locale="en-US")
         page.goto(url, timeout=45000, wait_until="domcontentloaded")
         page.wait_for_timeout(3000)
